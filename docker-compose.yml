@@ -1,0 +1,40 @@
+services:
+  laravel-app:
+    build:
+      context: .                        # Build using Dockerfile in current directory
+      dockerfile: Dockerfile
+    container_name: laravel-app
+    env_file:
+      - .env.container                  # load variables directly into the container's runtime environment
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html               # Sync local Laravel files with container
+      # - /var/www/html/vendor        # Prevent vendor overwrite issues
+    depends_on:
+      - mysql-db                      # Wait for MySQL before starting
+    networks:
+      - laravel_net
+
+  # MySQL service
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    env_file:
+      - .env.container            # load variables directly into the container's runtime environment
+    ports:
+      - 3307:3306
+    volumes:
+      - db_data:/var/lib/mysql   # Persist database data
+    networks:
+      - laravel_net
+
+# Volumes for persistent storage
+volumes:
+  db_data:
+
+# Network so containers can talk to each other
+networks:
+  laravel_net:
+    driver: bridge
