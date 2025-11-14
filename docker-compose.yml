@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    #command: gunicorn space4u.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn space4u.wsgi:application --bind 0.0.0.0:8000 --reload
+    #command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/var/www/html/space4u
+    expose:
+      - "8000"
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./static:/var/www/html/space4u/static
+    ports:
+      - "89:80"
+    depends_on:
+      - web
+
+  db:
+    image: mysql:8.0
+    container_name: django_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: django_space4u_rootuser
+      MYSQL_DATABASE: django_space4u
+      MYSQL_USER: django_space4u_user
+      MYSQL_PASSWORD: django_space4u_pwd
+    ports:
+      - "3315:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+volumes:
+  dbdata:
